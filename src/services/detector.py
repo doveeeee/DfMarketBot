@@ -61,7 +61,10 @@ class PriceDetector(IPriceDetector):
         """检测当前物品价格 - 使用模板方法模式"""
         try:
             coords = self.get_detection_coordinates()
-            return self._detect_value(coords)
+            thresh = 127
+            if self.screen_capture.width == 1920:
+                thresh = 80
+            return self._detect_value(coords, thresh=thresh)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 

@@ -484,7 +484,7 @@ if __name__ == "__main__":
                 file_path = os.path.join(dir_path, file_name)
                 img = cv2.imread(file_path)
                 if img is not None:
-                    res = ocr.image_to_string(img)
+                    res = ocr.image_to_string(img, thresh=80)
                     # print(f"File: {file_name}, Result: {res}")
                     expected = file_name.split(".")[0].split("_")[0]
                     if expected != res:
