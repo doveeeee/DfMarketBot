@@ -48,6 +48,11 @@ class PriceDetector(IPriceDetector):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot, binarize, font, thresh)
             if value is not None:
+                # 这里如果检测到的值小于abnormal_value，就会抛异常，原意是怕识别错误识别到了很低的价格然后亏钱
+                # 所以这里这么设计，但是现在有些不是检测价格的场景，不需要abnorma_value
+                # 这里可以考虑将abnormal_value默认值设置为0，需要主动过滤异常的地方再设abnormal_value
+                
+                if value < abnormal_value:  # 仅对价格进行异常过滤
                 if value < abnormal_value:  # 仅对价格进行异常过滤
                     print("ocr检测({value})异常，跳过检测")
                     continue
@@ -58,14 +63,15 @@ class PriceDetector(IPriceDetector):
 
         raise PriceDetectionException("ocr检测失败")
 
-    def detect_price(self) -> int:
+    def detect_price(self,abnormal_value=100) -> int:
         """检测当前物品价格 - 使用模板方法模式"""
         try:
             coords = self.get_detection_coordinates()
             thresh = 127
             if self.screen_capture.width == 1920:
                 thresh = 80
-            return self._detect_value(coords, thresh=thresh)
+            return self._detect_value(coords,abnormal_value=abnormal_value, thresh=thresh)
+             # abnormal_value=100 默认返回的值需要进行对比
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 
@@ -73,7 +79,7 @@ class PriceDetector(IPriceDetector):
         """检测当前哈夫币余额"""
         try:
             coords = self.coordinates["balance_detection"]
-            return self._detect_value(coords, 0, font="w", thresh=100)
+            return self._detect_value(coords, abnormal_value=0, font="w", thresh=100)
         except Exception as e:
             raise BalanceDetectionException(f"余额检测异常: {e}") from e
 
