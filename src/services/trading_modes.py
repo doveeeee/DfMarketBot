@@ -257,7 +257,9 @@ class RollingTradingMode(ITradingMode):
             current_price = 0
             for i in range(5):
                 # 检测价格
-                current_price = self.detector.detect_price()
+                current_price = self.detector.detect_price(abnormal_value=0)
+              # 第一次检测价格时不需要太精确，如价格差异太大，可以开启二次检测
+                
                 if current_price > min_price:
                     break
                 print(f"价格小于异常价格，重新检测({i}/5)")
