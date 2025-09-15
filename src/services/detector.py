@@ -236,13 +236,13 @@ class RollingModeDetector(PriceDetector):
         binarize = False
         if self.screen_capture.width == 1920:
             font = "g"
-        res = self._detect_area("expected_revenue_area", binarize=binarize, font=font)
+        res = self._detect_area("expected_revenue_area", binarize=binarize, font=font,abnormal_value=0)
         # 检测器会把售价边上的问号当成7，所以这里特殊处理一下... TODO: 以后再修
         return int((res - 7) / 10) if res % 10 == 7 else res
 
     def detect_total_sell_price_area(self) -> int:
         """检测当前售卖总价"""
-        return self._detect_area("total_sell_price_area", font="w", thresh=60)
+        return self._detect_area("total_sell_price_area", font="w", thresh=60,abnormal_value=0)
 
     def _detect_area(self, template, abnormal_value=100, binarize=True, font="", thresh=127) -> int:
         """检测模板的区域, 并返回数值"""
