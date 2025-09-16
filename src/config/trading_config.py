@@ -39,6 +39,7 @@ class TradingConfig:
     second_detect: bool = False
     switch_to_battlefield: bool = False
     switch_to_battlefield_count: int = 300
+    min_sell_price: int = 0
 
     def __post_init__(self):
         """验证配置参数"""

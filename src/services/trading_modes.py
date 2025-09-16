@@ -173,6 +173,7 @@ class HoardingTradingMode(ITradingMode):
 
 class RollingTradingMode(ITradingMode):
     """滚仓模式交易实现"""
+    detector: RollingModeDetector
 
     current_market_data: MarketData
     config: TradingConfig
@@ -590,14 +591,32 @@ class RollingTradingMode(ITradingMode):
         fast_sell_threshold = self._get_fast_sell_threshold()
 
         if fast_sell and min_sell_price > 0 and min_sell_price_count > fast_sell_threshold:
+            # 点击售价输入框
             self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["sell_price_text"])
             delay_helper.sleep("after_sell_price_text_click")
+
+            # 全选输入框内容
             self.action_executor.multi_key_press("ctrl", "a")
             delay_helper.sleep("after_select_sell_text_price")
-            # 先算出柱子插件，再减去一个柱子差价
-            min_sell_price = min_sell_price - (second_min_sell_price - min_sell_price)
-            event_bus.emit_overlay_text_updated(f"计算最低价: {min_sell_price}")
-            self.action_executor.type_text(str(min_sell_price))
+
+            # 将售卖价格设置为1
+            self.action_executor.type_text('1')
+            delay_helper.sleep("after_select_sell_text_price")
+
+            # 快速售卖指定点击位置
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["btn_quickSell_area"])
+            delay_helper.sleep("after_sell_price_text_click")
+
+            # 点击倒数第二根价格柱子获得最高卖价
+            self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["fast_sell_price_button"])
+            delay_helper.sleep("after_sell_price_text_click")
+
+            # 获取当前售卖价格
+            price_area_coords = self.detector.coordinates["rolling_mode"]["sell_price_text_area"]
+            min_sell_price = self.detector._detect_value(price_area_coords, binarize=True,
+                                                         thresh=127, font='w')
+            delay_helper.sleep("after_sell_price_text_click")
+
         else:
             self.action_executor.click_position(self.detector.coordinates["rolling_mode"]["min_sell_price_button"])
         delay_helper.sleep("after_set_sell_price")

@@ -38,6 +38,7 @@ class PriceDetector(IPriceDetector):
     def _detect_value(
         self,
         coords: List[float],
+        # abnormal_value=100,
         binarize=True,
         font="",
         thresh=127,
@@ -47,6 +48,9 @@ class PriceDetector(IPriceDetector):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot, binarize, font, thresh)
             if value is not None:
+                # if value < abnormal_value:  # 仅对价格进行异常过滤
+                #     print("ocr检测({value})异常，跳过检测")
+                #     continue
                 print("detected:", value)
                 return value
 
@@ -218,6 +222,7 @@ class RollingModeDetector(PriceDetector):
         font = "w"
         if self.screen_capture.width == 1920:
             font = "c"
+
         return self._detect_area("min_sell_price_count_area", binarize=False, font=font)
 
     def detect_expected_revenue(self) -> int:

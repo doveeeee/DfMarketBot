@@ -1,35 +1,39 @@
-ideal_price: 550
+ideal_price: 0
 key_mode: false
-max_price: 748
+max_price: 0
 rolling_loop_interval: 50
 hoarding_loop_interval: 150
 item_type: 0
-use_balance_calculation: true
-trading_mode: 0
+use_balance_calculation: false
+trading_mode: 1
 rolling_option: 0
 rolling_options:
-  - buy_price: 478
+  - buy_price: 520
     min_buy_price: 300
     buy_count: 4980
-    fast_sell_threshold: 200000
-  - buy_price: 3400
-    min_buy_price: 1500
+    fast_sell_threshold: 0
+    min_sell_price: 0
+  - buy_price: 450
+    min_buy_price: 270
     buy_count: 4980
-    fast_sell_threshold: 5000
-  - buy_price: 5200
-    min_buy_price: 2500
+    fast_sell_threshold: 0
+    min_sell_price: 0
+  - buy_price: 450
+    min_buy_price: 270
     buy_count: 4980
-    fast_sell_threshold: 15000
-  - buy_price: 1800
-    min_buy_price: 1200
-    buy_count: 4980
-    fast_sell_threshold: 20000
+    fast_sell_threshold: 0
+    min_sell_price: 0
+  - buy_price: 1700
+    min_buy_price: 700
+    buy_count: 1740
+    fast_sell_threshold: 0
+    min_sell_price: 0
 screen_width: 2560
 screen_height: 1440
 auto_sell: true
 fast_sell: true
 log_level: INFO
 second_detect: false
-switch_to_battlefield: true
-switch_to_battlefield_count: 400
+switch_to_battlefield: false
+switch_to_battlefield_count: 300
 min_sell_price: 528
