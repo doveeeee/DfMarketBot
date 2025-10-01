@@ -41,12 +41,16 @@ class PriceDetector(IPriceDetector):
         binarize=True,
         font="",
         thresh=127,
+        abnormal_value=0
     ) -> int:
         """通用的数值检测逻辑"""
         for _ in range(30):
             screenshot = self.screen_capture.capture_region(coords)
             value = self._extract_number(screenshot, binarize, font, thresh)
             if value is not None:
+                if value < abnormal_value:  # 仅对价格进行异常过滤
+                    print(f"ocr检测({value})异常，跳过检测")
+                    continue
                 print("detected:", value)
                 return value
 
@@ -105,7 +109,7 @@ class HoardingModeDetector(PriceDetector):
             thresh = 127
             if self.screen_capture.width == 1920:
                 thresh = 80
-            return self._detect_value(coords, thresh=thresh, binarize=False)
+            return self._detect_value(coords, thresh=thresh, binarize=False, abnormal_value=50)
         except Exception as e:
             raise PriceDetectionException(f"价格检测异常: {e}") from e
 

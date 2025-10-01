@@ -82,6 +82,7 @@ class HoardingTradingMode(ITradingMode):
                 return False
 
             self._execute_enter()
+            delay_helper.sleep("enter_action")
             # 获取当前价格
             current_price = self.detector.detect_price()
             if current_price < 100:
@@ -410,7 +411,6 @@ class RollingTradingMode(ITradingMode):
 
     def _execute_refresh(self) -> None:
         """执行刷新操作"""
-        print("execute refresh")
         self.action_executor.press_key("esc")
         delay_helper.sleep("after_refresh")
 
@@ -817,12 +817,21 @@ class TradingModeFactory:
 
 if __name__ == "__main__":
     from src.infrastructure.ocr_engine import TemplateOCREngine
+    from src.services import WindowService
+
+    ws = WindowService()
+    ws.detect_game_window()
+    x, y = ws.get_window_offset()
+    w, h = ws.get_window_size()
 
     sc = ScreenCapture()
-    ocr = TemplateOCREngine()
-    # detector = RollingModeDetector(sc, ocr)
-    detector = HoardingModeDetector(sc, ocr)
+    ocr = TemplateOCREngine(resolution=(w, h))
     executor = ActionExecutor()
+
+    sc.set_window_region(x, y, w, h)
+    executor.set_window_offset(x, y)
+    # detector = RollingModeDetector(sc, ocr)
+    detector = HoardingModeDetector(sc, ocr, True)
     # test_mode = RollingTradingMode(detector, executor)
     test_mode = HoardingTradingMode(detector, executor)
 
@@ -834,5 +843,6 @@ if __name__ == "__main__":
     # res = test_mode.detector.detect_expected_revenue()
     # res = test_mode.detector.detect_sell_num()
     # res = test_mode.detector.detect_price()
-    res = detector.detect_price()
+
+    res = test_mode.detector.detect_price()
     print(res)
