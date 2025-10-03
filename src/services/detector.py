@@ -73,7 +73,7 @@ class PriceDetector(IPriceDetector):
         """检测当前哈夫币余额"""
         try:
             coords = self.coordinates["balance_detection"]
-            return self._detect_value(coords, font="w", thresh=100)
+            return self._detect_value(coords, font="w", binarize=False)
         except Exception as e:
             raise BalanceDetectionException(f"余额检测异常: {e}") from e
 
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     print(sc.width, sc.height)
     ocr = TemplateOCREngine()
     detector = RollingModeDetector(sc, ocr)
-    result = detector.detect_balance()
+    result = detector.detect_total_sell_price_area()
     print(result)
     # test_res = detector._match_template("stuck_check2_equipment_scheme", "equipment_scheme")
     # print(test_res)

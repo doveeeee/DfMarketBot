@@ -51,6 +51,9 @@ class HoardingTradingMode(ITradingMode):
         self.buy_failed_count = 0
         # 停止标志
         self._should_stop = False
+        self.cost = 0
+        self.count = 0
+        self.detail = {}
 
     def initialize(self, config: TradingConfig, **kwargs) -> None:
         """初始化屯仓模式"""
@@ -88,9 +91,8 @@ class HoardingTradingMode(ITradingMode):
             if current_price < 100:
                 event_bus.emit_overlay_text_updated(f"当前价格({current_price})异常, 跳过本次购买")
                 return not self._should_stop
-            event_bus.emit_overlay_text_updated(f"当前价格: {current_price}")
-            # 获取当前余额（如果需要）
-            if self.config.use_balance_calculation and self.last_buy_quantity != 0:
+
+            if self.last_buy_quantity != 0:
                 self.current_balance = self._detect_balance()
 
             self.current_market_data = MarketData(
@@ -101,19 +103,27 @@ class HoardingTradingMode(ITradingMode):
                 timestamp=time.time(),
             )
 
-            if (
-                self.config.use_balance_calculation
-                and self.last_buy_quantity != 0
-                and self.last_balance == self.current_balance
-            ):
-                self.buy_failed_count += 1
-            else:
-                self.buy_failed_count = 0
+            if self.last_buy_quantity != 0:
+                if self.last_balance == self.current_balance:
+                    self.buy_failed_count += 1
+                else:
+                    self.buy_failed_count = 0
+                    last_cost = self.last_balance - self.current_balance
+                    last_unit_price = last_cost / self.last_buy_quantity
+                    self.cost += last_cost
+                    self.count += self.last_buy_quantity
+                    if self.detail.get(last_unit_price):
+                        self.detail[last_unit_price] += self.last_buy_quantity
+                    else:
+                        self.detail[last_unit_price] = self.last_buy_quantity
 
             if self.buy_failed_count >= 10:
                 print("连续10次购买失败，仓库可能满了，退出购买")
                 event_bus.emit_overlay_text_updated("连续10次购买失败，仓库可能满了，退出购买")
                 return False
+
+            event_bus.emit_overlay_text_updated(f"当前价格[{current_price}] 总购买数[{self.count}] 总花费[{self.cost}] "
+                                                f"均价[{round(self.cost / self.count, 2) if self.count != 0 else 0.00}]")
 
             # 执行交易逻辑
             if self.strategy.should_buy(self.current_market_data):
@@ -130,6 +140,7 @@ class HoardingTradingMode(ITradingMode):
             elif self.refresh_strategy.should_refresh(self.current_market_data):
                 print("刷新购买")
                 quantity = self.strategy.get_buy_quantity(self.current_market_data)
+                event_bus.emit_overlay_text_updated(f"刷新购买, 价格: {current_price}, 数量: {quantity}")
                 self._execute_buy(quantity)
                 self.last_buy_quantity = self.refresh_strategy.get_buy_quantity(self.config)
             elif self.strategy.should_refresh(self.current_market_data):
@@ -138,8 +149,7 @@ class HoardingTradingMode(ITradingMode):
                 self.last_buy_quantity = 0
 
             # 更新余额
-            if self.config.use_balance_calculation:
-                self.last_balance = self.current_balance
+            self.last_balance = self.current_balance
 
             return not self._should_stop  # 如果收到停止信号则返回False
 
@@ -821,15 +831,15 @@ if __name__ == "__main__":
 
     ws = WindowService()
     ws.detect_game_window()
-    x, y = ws.get_window_offset()
+    x1, y1 = ws.get_window_offset()
     w, h = ws.get_window_size()
 
     sc = ScreenCapture()
     ocr = TemplateOCREngine(resolution=(w, h))
     executor = ActionExecutor()
 
-    sc.set_window_region(x, y, w, h)
-    executor.set_window_offset(x, y)
+    sc.set_window_region(x1, y1, w, h)
+    executor.set_window_offset(x1, y1)
     # detector = RollingModeDetector(sc, ocr)
     detector = HoardingModeDetector(sc, ocr, True)
     # test_mode = RollingTradingMode(detector, executor)
@@ -844,5 +854,5 @@ if __name__ == "__main__":
     # res = test_mode.detector.detect_sell_num()
     # res = test_mode.detector.detect_price()
 
-    res = test_mode.detector.detect_price()
+    res = test_mode._detect_balance()
     print(res)
