@@ -64,6 +64,12 @@ class HoardingTradingMode(ITradingMode):
         self._should_stop = False
         delay_helper.reload_config()
         delay_helper.set_mode(TradingMode.HOARDING)
+        if kwargs.get("total_count", None):
+            self.count = kwargs.get("total_count")
+        if kwargs.get("cost", None):
+            self.cost = kwargs.get("cost")
+        if kwargs.get("detail", None):
+            self.detail = kwargs.get("detail", {})
 
     def stop(self) -> None:
         """停止交易模式"""
@@ -94,16 +100,6 @@ class HoardingTradingMode(ITradingMode):
 
             if self.last_buy_quantity != 0:
                 self.current_balance = self._detect_balance()
-
-            self.current_market_data = MarketData(
-                current_price=current_price,
-                balance=self.current_balance,
-                last_balance=self.last_balance,
-                last_buy_quantity=self.last_buy_quantity,
-                timestamp=time.time(),
-            )
-
-            if self.last_buy_quantity != 0:
                 if self.last_balance == self.current_balance:
                     self.buy_failed_count += 1
                 else:
@@ -122,8 +118,22 @@ class HoardingTradingMode(ITradingMode):
                 event_bus.emit_overlay_text_updated("连续10次购买失败，仓库可能满了，退出购买")
                 return False
 
-            event_bus.emit_overlay_text_updated(f"当前价格[{current_price}] 总购买数[{self.count}] 总花费[{self.cost}] "
-                                                f"均价[{round(self.cost / self.count, 2) if self.count != 0 else 0.00}]")
+            self.current_market_data = MarketData(
+                current_price=current_price,
+                balance=self.current_balance,
+                last_balance=self.last_balance,
+                last_buy_quantity=self.last_buy_quantity,
+                timestamp=time.time(),
+                total_count=self.count,
+                cost=self.cost,
+                detail=self.detail
+            )
+
+            event_bus.emit_overlay_text_updated(
+                f"当前价格[{current_price}] 总购买数[{self.count}] 总花费[{self.cost}] "
+                f"均价[{round(self.cost / self.count, 2) if self.count != 0 else 0.00}] "
+                f"详情[{' '.join(['{}: {}'.format(int(i), j) for i, j in self.detail.items()])}]"
+            )
 
             # 执行交易逻辑
             if self.strategy.should_buy(self.current_market_data):

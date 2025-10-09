@@ -34,6 +34,9 @@ class TradingService(ITradingService):
 
         self.profit = 0
         self.count = 0
+        self.total_count = 0
+        self.cost = 0
+        self.detail = {}
 
     def initialize(self, config: TradingConfig) -> None:
         """初始化交易服务"""
@@ -71,6 +74,9 @@ class TradingService(ITradingService):
             market_data = self.get_market_data()
             self.profit = market_data.profit
             self.count = market_data.count
+            self.total_count = market_data.total_count
+            self.cost = market_data.cost
+            self.detail = market_data.detail
             return res
 
         except Exception as e:
@@ -201,7 +207,8 @@ class TradingService(ITradingService):
             )
 
             # 初始化新模式
-            new_mode.initialize(config, profit=self.profit, count=self.count)
+            new_mode.initialize(config, profit=self.profit, count=self.count,
+                                total_count=self.total_count, cost=self.cost, detail=self.detail)
 
             # 更新当前模式
             self.current_mode = new_mode

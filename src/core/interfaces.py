@@ -22,6 +22,21 @@ class MarketData:
     timestamp: float = 0.0
     profit: Optional[int] = 0
     count: Optional[int] = 0
+    total_count: Optional[int] = 0
+    cost: Optional[int] = 0
+    detail: Optional[dict[float, int]] = None
+
+    def update_statistics(self, market_data):
+        if market_data.profit > 0:
+            self.profit = market_data.profit
+        if market_data.count > 0:
+            self.count = market_data.count
+        if market_data.total_count > 0:
+            self.total_count = market_data.total_count
+        if market_data.cost > 0:
+            self.cost = market_data.cost
+        if market_data.detail is not None:
+            self.detail = market_data.detail
 
 
 class IPriceDetector(ABC):
